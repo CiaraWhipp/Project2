@@ -33,15 +33,23 @@ sentiments, and 0 is neutral.
 Read in **OnlineNewsPopularity.csv**. The data set was download from
 [this
 website](https://archive.ics.uci.edu/ml/datasets/Online+News+Popularity).
-Keep the `share` variable, the four predictor variables mentioned above,
-and the variables that indicated the weekday the article was published.
-Change `shares` into a binary classification by splitting it into two
-groups - \<1400 and ≥1400.
+Create a new variable called `day` to indicate the day of the week the
+article was publsiehd. Keep the `shares` variable, the four predictor
+variables mentioned above, and the new `day` variable. Change `shares`
+into a binary classification by splitting it into two groups - \<1400
+and ≥1400.
 
 ``` r
 newsData <- read_csv("OnlineNewsPopularity.csv") %>% 
+    mutate(day=ifelse(weekday_is_monday==1, "Monday",
+                ifelse(weekday_is_tuesday==1,"Tuesday",
+                    ifelse(weekday_is_wednesday==1,"Wednesday",
+                        ifelse(weekday_is_thursday==1,"Thursday",
+                            ifelse(weekday_is_friday==1,"Friday",
+                                ifelse(weekday_is_saturday==1,"Saturday",
+                                    "Sunday"))))))) %>%
   select(shares, global_subjectivity, global_sentiment_polarity,
-         title_subjectivity, title_sentiment_polarity, starts_with("weekday"))
+         title_subjectivity, title_sentiment_polarity, day)
 newsData$shares <- ifelse(newsData$shares<1400, "<1400", "≥1400")
 ```
 
