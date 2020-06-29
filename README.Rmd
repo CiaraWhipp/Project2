@@ -5,6 +5,9 @@ date: "6/29/2020"
 output:
   rmarkdown::github_document:
     toc: true
+    toc_depth: 1
+parms: 
+  day: "Monday"
 ---
 
 ```{r setup, include=FALSE}
@@ -38,6 +41,24 @@ newsData$shares <- ifelse(newsData$shares<1400, "<1400", "≥1400")
 
 ## Summarization  
 
+### Summary Statistics
+
+The summary statistics tables below give the minimum, 1st quantile, median, mean, 3rd quantile, and maximum for `global_subjectivity`,`global_sentiment_polarity`, `title_subjectivity`, and `title_sentiment_polarity` for <1400 shares and ≥1400 shares respectively.  
+
+```{r statTable, echo=TRUE, eval=TRUE}
+newsDataLt <- newsData %>%
+  filter(shares=="<1400") %>%
+  select(global_subjectivity, global_sentiment_polarity,
+         title_subjectivity, title_sentiment_polarity)
+knitr::kable(apply(newsDataLt,2,summary), 
+             caption="Summary Statisitics for <1400 Shares")
+newsDataGt <- newsData %>%
+  filter(shares=="≥1400") %>%
+  select(global_subjectivity, global_sentiment_polarity,
+         title_subjectivity, title_sentiment_polarity)
+knitr::kable(apply(newsDataGt,2,summary), 
+             caption="Summary Statisitics for ≥1400 Shares")
+```
 
 ## Modeling  
 

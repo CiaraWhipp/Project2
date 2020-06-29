@@ -55,6 +55,54 @@ newsData$shares <- ifelse(newsData$shares<1400, "<1400", "≥1400")
 
 ## Summarization
 
+### Summary Statistics
+
+The summary statistics tables below give the minimum, 1st quantile,
+median, mean, 3rd quantile, and maximum for
+`global_subjectivity`,`global_sentiment_polarity`, `title_subjectivity`,
+and `title_sentiment_polarity` for \<1400 shares and ≥1400 shares
+respectively.
+
+``` r
+newsDataLt <- newsData %>%
+  filter(shares=="<1400") %>%
+  select(global_subjectivity, global_sentiment_polarity,
+         title_subjectivity, title_sentiment_polarity)
+knitr::kable(apply(newsDataLt,2,summary), 
+             caption="Summary Statisitics for <1400 Shares")
+```
+
+|         | global\_subjectivity | global\_sentiment\_polarity | title\_subjectivity | title\_sentiment\_polarity |
+| ------- | -------------------: | --------------------------: | ------------------: | -------------------------: |
+| Min.    |            0.0000000 |                 \-0.3937500 |           0.0000000 |                \-1.0000000 |
+| 1st Qu. |            0.3847431 |                   0.0479154 |           0.0000000 |                  0.0000000 |
+| Median  |            0.4443753 |                   0.1091337 |           0.1000000 |                  0.0000000 |
+| Mean    |            0.4348761 |                   0.1116841 |           0.2711116 |                  0.0562428 |
+| 3rd Qu. |            0.5002723 |                   0.1706262 |           0.5000000 |                  0.1363636 |
+| Max.    |            1.0000000 |                   0.7278409 |           1.0000000 |                  1.0000000 |
+
+Summary Statisitics for \<1400 Shares
+
+``` r
+newsDataGt <- newsData %>%
+  filter(shares=="≥1400") %>%
+  select(global_subjectivity, global_sentiment_polarity,
+         title_subjectivity, title_sentiment_polarity)
+knitr::kable(apply(newsDataGt,2,summary), 
+             caption="Summary Statisitics for ≥1400 Shares")
+```
+
+|         | global\_subjectivity | global\_sentiment\_polarity | title\_subjectivity | title\_sentiment\_polarity |
+| ------- | -------------------: | --------------------------: | ------------------: | -------------------------: |
+| Min.    |            0.0000000 |                 \-0.3802083 |           0.0000000 |                 \-1.000000 |
+| 1st Qu. |            0.4063632 |                   0.0678053 |           0.0000000 |                   0.000000 |
+| Median  |            0.4611443 |                   0.1267740 |           0.1833333 |                   0.000000 |
+| Mean    |            0.4507946 |                   0.1259742 |           0.2921791 |                   0.084696 |
+| 3rd Qu. |            0.5148097 |                   0.1835754 |           0.5000000 |                   0.200000 |
+| Max.    |            1.0000000 |                   0.6550000 |           1.0000000 |                   1.000000 |
+
+Summary Statisitics for ≥1400 Shares
+
 ## Modeling
 
 ## Automation
