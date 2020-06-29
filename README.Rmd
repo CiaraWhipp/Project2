@@ -21,7 +21,7 @@ The **OnlineNewsPopularity** data set has a total of 61 variables. There are 2 n
 
 ## Data  
 
-I will use the variables `global_subjectivity`,`global_sentiment_polarity`, `title_subjectivity`, and `title_sentiment_polarity` to create the two predictive models. `global_subjectivity`measures text subjectivity and `title_subjectivity` measures title subjectivity. Both variables take on values between 0 and 1 . The variable `global_sentiment_polarity` measures text sentiment polarity and takes on values between -0.39375 and 0.073953824. `title_sentiment_polarity` measures title polarity and takes on values between -1 and 1. For the polarity variables, where positive values represent positive sentiments, negative values represent negative sentiments, and 0 is neutral.  
+I will use the variables `global_subjectivity`,`global_sentiment_polarity`, `title_subjectivity`, and `title_sentiment_polarity` to create the two predictive models. `global_subjectivity`measures text subjectivity and `title_subjectivity` measures title subjectivity. Both variables take on values between 0 and 1 . The variable `global_sentiment_polarity` measures text sentiment polarity and takes on values between -0.39375 and 0.727840909. `title_sentiment_polarity` measures title polarity and takes on values between -1 and 1. For the polarity variables, where positive values represent positive sentiments, negative values represent negative sentiments, and 0 is neutral.  
 
 Read in **OnlineNewsPopularity.csv**. The data set was download from [this website](https://archive.ics.uci.edu/ml/datasets/Online+News+Popularity). Create a new variable called `day` to indicate the day of the week the article was publsiehd. Keep the `shares` variable, the four predictor variables mentioned above, and the new `day` variable. Change `shares` into a binary classification by splitting it into two groups - <1400 and ≥1400.  
 
@@ -39,26 +39,38 @@ newsData <- read_csv("OnlineNewsPopularity.csv") %>%
 newsData$shares <- ifelse(newsData$shares<1400, "<1400", "≥1400")
 ```
 
+Split the **newsData** data set into training and testing data sets.  
+
+```{r split, echo=TRUE, eval=TRUE}
+set.seed(1)
+train <- sample(1:nrow(newsData), size=nrow(newsData)*0.7)
+test <- dplyr::setdiff(1:nrow(newsData), train)
+
+newsDataTrain <- newsData[train, ]
+nwsDataTest <- newsData[test, ]
+```
+
 ## Summarization  
 
 ### Summary Statistics
 
-The summary statistics tables below give the minimum, 1st quantile, median, mean, 3rd quantile, and maximum for `global_subjectivity`,`global_sentiment_polarity`, `title_subjectivity`, and `title_sentiment_polarity` for <1400 shares and ≥1400 shares respectively.  
+The summary statistics tables for the training data give the minimum, 1st quantile, median, mean, 3rd quantile, and maximum for `global_subjectivity`,`global_sentiment_polarity`, `title_subjectivity`, and `title_sentiment_polarity` for <1400 shares and ≥1400 shares respectively.  
 
 ```{r statTable, echo=TRUE, eval=TRUE}
-newsDataLt <- newsData %>%
+newsDataLt <- newsDataTrain %>%
   filter(shares=="<1400") %>%
   select(global_subjectivity, global_sentiment_polarity,
          title_subjectivity, title_sentiment_polarity)
-knitr::kable(apply(newsDataLt,2,summary), 
-             caption="Summary Statisitics for <1400 Shares")
-newsDataGt <- newsData %>%
+knitr::kable(apply(newsDataLt,2,summary), digits=2,
+             caption="Summary Statisitics for <1400 Shares in Training Data")
+newsDataGt <- newsDataTrain %>%
   filter(shares=="≥1400") %>%
   select(global_subjectivity, global_sentiment_polarity,
          title_subjectivity, title_sentiment_polarity)
-knitr::kable(apply(newsDataGt,2,summary), 
-             caption="Summary Statisitics for ≥1400 Shares")
+knitr::kable(apply(newsDataGt,2,summary), digits=2,
+             caption="Summary Statisitics for ≥1400 Shares in Training Data")
 ```
+
 
 ## Modeling  
 

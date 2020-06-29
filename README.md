@@ -24,7 +24,7 @@ and `title_sentiment_polarity` to create the two predictive models.
 `global_subjectivity`measures text subjectivity and `title_subjectivity`
 measures title subjectivity. Both variables take on values between 0 and
 1 . The variable `global_sentiment_polarity` measures text sentiment
-polarity and takes on values between -0.39375 and 0.073953824.
+polarity and takes on values between -0.39375 and 0.727840909.
 `title_sentiment_polarity` measures title polarity and takes on values
 between -1 and 1. For the polarity variables, where positive values
 represent positive sentiments, negative values represent negative
@@ -53,55 +53,66 @@ newsData <- read_csv("OnlineNewsPopularity.csv") %>%
 newsData$shares <- ifelse(newsData$shares<1400, "<1400", "≥1400")
 ```
 
+Split the **newsData** data set into training and testing data sets.
+
+``` r
+set.seed(1)
+train <- sample(1:nrow(newsData), size=nrow(newsData)*0.7)
+test <- dplyr::setdiff(1:nrow(newsData), train)
+
+newsDataTrain <- newsData[train, ]
+nwsDataTest <- newsData[test, ]
+```
+
 ## Summarization
 
 ### Summary Statistics
 
-The summary statistics tables below give the minimum, 1st quantile,
-median, mean, 3rd quantile, and maximum for
+The summary statistics tables for the training data give the minimum,
+1st quantile, median, mean, 3rd quantile, and maximum for
 `global_subjectivity`,`global_sentiment_polarity`, `title_subjectivity`,
 and `title_sentiment_polarity` for \<1400 shares and ≥1400 shares
 respectively.
 
 ``` r
-newsDataLt <- newsData %>%
+newsDataLt <- newsDataTrain %>%
   filter(shares=="<1400") %>%
   select(global_subjectivity, global_sentiment_polarity,
          title_subjectivity, title_sentiment_polarity)
-knitr::kable(apply(newsDataLt,2,summary), 
-             caption="Summary Statisitics for <1400 Shares")
+knitr::kable(apply(newsDataLt,2,summary), digits=2,
+             caption="Summary Statisitics for <1400 Shares in Training Data")
 ```
 
 |         | global\_subjectivity | global\_sentiment\_polarity | title\_subjectivity | title\_sentiment\_polarity |
 | ------- | -------------------: | --------------------------: | ------------------: | -------------------------: |
-| Min.    |            0.0000000 |                 \-0.3937500 |           0.0000000 |                \-1.0000000 |
-| 1st Qu. |            0.3847431 |                   0.0479154 |           0.0000000 |                  0.0000000 |
-| Median  |            0.4443753 |                   0.1091337 |           0.1000000 |                  0.0000000 |
-| Mean    |            0.4348761 |                   0.1116841 |           0.2711116 |                  0.0562428 |
-| 3rd Qu. |            0.5002723 |                   0.1706262 |           0.5000000 |                  0.1363636 |
-| Max.    |            1.0000000 |                   0.7278409 |           1.0000000 |                  1.0000000 |
+| Min.    |                 0.00 |                      \-0.39 |                0.00 |                     \-1.00 |
+| 1st Qu. |                 0.38 |                        0.05 |                0.00 |                       0.00 |
+| Median  |                 0.44 |                        0.11 |                0.10 |                       0.00 |
+| Mean    |                 0.43 |                        0.11 |                0.27 |                       0.05 |
+| 3rd Qu. |                 0.50 |                        0.17 |                0.50 |                       0.14 |
+| Max.    |                 1.00 |                        0.73 |                1.00 |                       1.00 |
 
-Summary Statisitics for \<1400 Shares
+Summary Statisitics for \<1400 Shares in Training Data
 
 ``` r
-newsDataGt <- newsData %>%
+newsDataGt <- newsDataTrain %>%
   filter(shares=="≥1400") %>%
   select(global_subjectivity, global_sentiment_polarity,
          title_subjectivity, title_sentiment_polarity)
-knitr::kable(apply(newsDataGt,2,summary), 
-             caption="Summary Statisitics for ≥1400 Shares")
+knitr::kable(apply(newsDataGt,2,summary), digits=2,
+             caption="Summary Statisitics for ≥1400 Shares in Training Data")
 ```
 
 |         | global\_subjectivity | global\_sentiment\_polarity | title\_subjectivity | title\_sentiment\_polarity |
 | ------- | -------------------: | --------------------------: | ------------------: | -------------------------: |
-| Min.    |            0.0000000 |                 \-0.3802083 |           0.0000000 |                 \-1.000000 |
-| 1st Qu. |            0.4063632 |                   0.0678053 |           0.0000000 |                   0.000000 |
-| Median  |            0.4611443 |                   0.1267740 |           0.1833333 |                   0.000000 |
-| Mean    |            0.4507946 |                   0.1259742 |           0.2921791 |                   0.084696 |
-| 3rd Qu. |            0.5148097 |                   0.1835754 |           0.5000000 |                   0.200000 |
-| Max.    |            1.0000000 |                   0.6550000 |           1.0000000 |                   1.000000 |
+| Min.    |                 0.00 |                      \-0.38 |                0.00 |                     \-1.00 |
+| 1st Qu. |                 0.41 |                        0.07 |                0.00 |                       0.00 |
+| Median  |                 0.46 |                        0.13 |                0.17 |                       0.00 |
+| Mean    |                 0.45 |                        0.13 |                0.29 |                       0.08 |
+| 3rd Qu. |                 0.51 |                        0.18 |                0.50 |                       0.20 |
+| Max.    |                 1.00 |                        0.65 |                1.00 |                       1.00 |
 
-Summary Statisitics for ≥1400 Shares
+Summary Statisitics for ≥1400 Shares in Training Data
 
 ## Modeling
 
