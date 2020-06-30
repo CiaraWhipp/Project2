@@ -37,7 +37,7 @@ Create a new variable called `day` to indicate the day of the week the
 article was publsiehd. Keep the `shares` variable, the four predictor
 variables mentioned above, and the new `day` variable. Change `shares`
 into a binary classification by splitting it into two groups - \<1400
-and ≥1400.
+will be represented as 0 and ≥1400 will be represented as 1.
 
 ``` r
 newsData <- read_csv("OnlineNewsPopularity.csv") %>% 
@@ -50,7 +50,8 @@ newsData <- read_csv("OnlineNewsPopularity.csv") %>%
                                     "Sunday"))))))) %>%
   select(shares, global_subjectivity, global_sentiment_polarity,
          title_subjectivity, title_sentiment_polarity, day)
-newsData$shares <- ifelse(newsData$shares<1400, "<1400", "≥1400")
+newsData$shares <- ifelse(newsData$shares<1400, "0", "1")
+newsData$shares <- as.factor(newsData$shares)
 ```
 
 Split the **newsData** data set into training and testing data sets.
@@ -61,7 +62,7 @@ train <- sample(1:nrow(newsData), size=nrow(newsData)*0.7)
 test <- dplyr::setdiff(1:nrow(newsData), train)
 
 newsDataTrain <- newsData[train, ]
-nwsDataTest <- newsData[test, ]
+newsDataTest <- newsData[test, ]
 ```
 
 ## Summarization
@@ -76,7 +77,7 @@ respectively.
 
 ``` r
 newsDataLt <- newsDataTrain %>%
-  filter(shares=="<1400") %>%
+  filter(shares=="0") %>%
   select(global_subjectivity, global_sentiment_polarity,
          title_subjectivity, title_sentiment_polarity)
 knitr::kable(apply(newsDataLt,2,summary), digits=2,
@@ -96,7 +97,7 @@ Summary Statisitics for \<1400 Shares in Training Data
 
 ``` r
 newsDataGt <- newsDataTrain %>%
-  filter(shares=="≥1400") %>%
+  filter(shares=="1") %>%
   select(global_subjectivity, global_sentiment_polarity,
          title_subjectivity, title_sentiment_polarity)
 knitr::kable(apply(newsDataGt,2,summary), digits=2,
@@ -114,6 +115,75 @@ knitr::kable(apply(newsDataGt,2,summary), digits=2,
 
 Summary Statisitics for ≥1400 Shares in Training Data
 
+``` r
+GGally::ggpairs(newsDataTrain)
+```
+
+![](README_files/figure-gfm/plot-1.png)<!-- -->
+
 ## Modeling
+
+### Ensemble Model - Classification Tree
+
+This classification tree aims to predict the `shares` category based on
+`global_subjectivity`,`global_sentiment_polarity`, `title_subjectivity`,
+and `title_sentiment_polarity`. Classification trees require the tuning
+parameter **cp**. `trainControl` is used to determine the “best” **cp**
+value for this model. The `preProcess` agrument standardizes the
+variables.
+
+``` r
+trCtrl <- trainControl(method="repeatedcv", number=10, repeats=3)
+classTreeFit <- train(shares~ global_subjectivity*global_sentiment_polarity*
+                 title_sentiment_polarity*title_subjectivity, 
+               data=newsDataTrain, 
+               method="rpart",
+               trControl=trCtrl,
+               preProcess=c("center", "scale"))
+classTreeFit
+```
+
+Use the `predict` function to predict the `shares` variable in the
+**newsDataTest** data set. `confusionMatrix` compares the predicted
+values to the actual values in the data set and provides the accuracy of
+the model.
+
+``` r
+classTreePred <- predict(classTreeFit, newdata=newsDataTest)
+confusionMatrix(classTreePred, newsDataTest$shares)
+```
+
+    ## Confusion Matrix and Statistics
+    ## 
+    ##           Reference
+    ## Prediction    0    1
+    ##          0 1598 1301
+    ##          1 3982 5013
+    ##                                           
+    ##                Accuracy : 0.5558          
+    ##                  95% CI : (0.5468, 0.5648)
+    ##     No Information Rate : 0.5309          
+    ##     P-Value [Acc > NIR] : 2.458e-08       
+    ##                                           
+    ##                   Kappa : 0.0826          
+    ##                                           
+    ##  Mcnemar's Test P-Value : < 2.2e-16       
+    ##                                           
+    ##             Sensitivity : 0.2864          
+    ##             Specificity : 0.7939          
+    ##          Pos Pred Value : 0.5512          
+    ##          Neg Pred Value : 0.5573          
+    ##              Prevalence : 0.4691          
+    ##          Detection Rate : 0.1344          
+    ##    Detection Prevalence : 0.2437          
+    ##       Balanced Accuracy : 0.5402          
+    ##                                           
+    ##        'Positive' Class : 0               
+    ## 
+
+From the output, we can see this model has an accuracy of 55.58% and
+therefore, has a misclassification rate of 44.42%.
+
+### Linear Regression Model -
 
 ## Automation

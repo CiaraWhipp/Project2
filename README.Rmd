@@ -13,6 +13,7 @@ parms:
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
 library(tidyverse)
+library(caret)
 ```
 
 ## Introduction  
@@ -23,7 +24,7 @@ The **OnlineNewsPopularity** data set has a total of 61 variables. There are 2 n
 
 I will use the variables `global_subjectivity`,`global_sentiment_polarity`, `title_subjectivity`, and `title_sentiment_polarity` to create the two predictive models. `global_subjectivity`measures text subjectivity and `title_subjectivity` measures title subjectivity. Both variables take on values between 0 and 1 . The variable `global_sentiment_polarity` measures text sentiment polarity and takes on values between -0.39375 and 0.727840909. `title_sentiment_polarity` measures title polarity and takes on values between -1 and 1. For the polarity variables, where positive values represent positive sentiments, negative values represent negative sentiments, and 0 is neutral.  
 
-Read in **OnlineNewsPopularity.csv**. The data set was download from [this website](https://archive.ics.uci.edu/ml/datasets/Online+News+Popularity). Create a new variable called `day` to indicate the day of the week the article was publsiehd. Keep the `shares` variable, the four predictor variables mentioned above, and the new `day` variable. Change `shares` into a binary classification by splitting it into two groups - <1400 and ≥1400.  
+Read in **OnlineNewsPopularity.csv**. The data set was download from [this website](https://archive.ics.uci.edu/ml/datasets/Online+News+Popularity). Create a new variable called `day` to indicate the day of the week the article was publsiehd. Keep the `shares` variable, the four predictor variables mentioned above, and the new `day` variable. Change `shares` into a binary classification by splitting it into two groups - <1400 will be represented as 0 and ≥1400 will be represented as 1.  
 
 ```{r, echo=TRUE, eval=TRUE, message=FALSE}
 newsData <- read_csv("OnlineNewsPopularity.csv") %>% 
@@ -36,7 +37,8 @@ newsData <- read_csv("OnlineNewsPopularity.csv") %>%
                                     "Sunday"))))))) %>%
   select(shares, global_subjectivity, global_sentiment_polarity,
          title_subjectivity, title_sentiment_polarity, day)
-newsData$shares <- ifelse(newsData$shares<1400, "<1400", "≥1400")
+newsData$shares <- ifelse(newsData$shares<1400, "0", "1")
+newsData$shares <- as.factor(newsData$shares)
 ```
 
 Split the **newsData** data set into training and testing data sets.  
@@ -47,7 +49,7 @@ train <- sample(1:nrow(newsData), size=nrow(newsData)*0.7)
 test <- dplyr::setdiff(1:nrow(newsData), train)
 
 newsDataTrain <- newsData[train, ]
-nwsDataTest <- newsData[test, ]
+newsDataTest <- newsData[test, ]
 ```
 
 ## Summarization  
@@ -58,21 +60,53 @@ The summary statistics tables for the training data give the minimum, 1st quanti
 
 ```{r statTable, echo=TRUE, eval=TRUE}
 newsDataLt <- newsDataTrain %>%
-  filter(shares=="<1400") %>%
+  filter(shares=="0") %>%
   select(global_subjectivity, global_sentiment_polarity,
          title_subjectivity, title_sentiment_polarity)
 knitr::kable(apply(newsDataLt,2,summary), digits=2,
              caption="Summary Statisitics for <1400 Shares in Training Data")
 newsDataGt <- newsDataTrain %>%
-  filter(shares=="≥1400") %>%
+  filter(shares=="1") %>%
   select(global_subjectivity, global_sentiment_polarity,
          title_subjectivity, title_sentiment_polarity)
 knitr::kable(apply(newsDataGt,2,summary), digits=2,
              caption="Summary Statisitics for ≥1400 Shares in Training Data")
 ```
 
+```{r plot,newsDataGtecho=TRUE, eval=TRUE, message=FALSE}
+GGally::ggpairs(newsDataTrain)
+```
+
 
 ## Modeling  
+
+### Ensemble Model - Classification Tree
+
+This classification tree aims to predict the `shares` category based on `global_subjectivity`,`global_sentiment_polarity`, `title_subjectivity`, and `title_sentiment_polarity`. Classification trees require the tuning parameter **cp**. `trainControl` is used to determine the "best" **cp** value for this model. The `preProcess` agrument standardizes the variables.   
+
+```{r rfFit, echo=TRUE, eval=TRUE, results=FALSE}
+trCtrl <- trainControl(method="repeatedcv", number=10, repeats=3)
+classTreeFit <- train(shares~ global_subjectivity*global_sentiment_polarity*
+                 title_sentiment_polarity*title_subjectivity, 
+               data=newsDataTrain, 
+               method="rpart",
+               trControl=trCtrl,
+               preProcess=c("center", "scale"))
+classTreeFit
+```
+
+Use the `predict` function to predict the `shares` variable in the **newsDataTest** data set. `confusionMatrix` compares the predicted values to the actual values in the data set and provides the accuracy of the model.  
+
+```{r rfPred, echo=TRUE, eval=TRUE}
+classTreePred <- predict(classTreeFit, newdata=newsDataTest)
+confusionMatrix(classTreePred, newsDataTest$shares)
+```
+
+From the output, we can see this model has an accuracy of 55.58% and therefore, has a misclassification rate of 44.42%.  
+
+### Linear Regression Model - 
+
+
 
 ## Automation  
 
