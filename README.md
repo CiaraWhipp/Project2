@@ -184,6 +184,103 @@ confusionMatrix(classTreePred, newsDataTest$shares)
 From the output, we can see this model has an accuracy of 55.58% and
 therefore, has a misclassification rate of 44.42%.
 
-### Linear Regression Model -
+### Linear Regression Model - Logistic Regress
+
+Since our target variable is binary, we can use the binomial
+distribution to fit a logistic regression model. I choose to model
+`shares` by the all combinations of main effects and interactions of
+`global_subjectivity` and `global_sentiment_polarity`, all combinations
+of main effects and interactions of `global_sentiment_polarity` and
+`title_sentiment_polarity`, and the main effect of `title_subjectivity`.
+
+``` r
+glmFit <- glm(shares ~ global_subjectivity*global_sentiment_polarity + 
+                global_sentiment_polarity*title_sentiment_polarity +
+                title_subjectivity,
+              data=newsDataTrain,
+              family="binomial")
+summary(glmFit)
+```
+
+    ## 
+    ## Call:
+    ## glm(formula = shares ~ global_subjectivity * global_sentiment_polarity + 
+    ##     global_sentiment_polarity * title_sentiment_polarity + title_subjectivity, 
+    ##     family = "binomial", data = newsDataTrain)
+    ## 
+    ## Deviance Residuals: 
+    ##     Min       1Q   Median       3Q      Max  
+    ## -1.8770  -1.2141   0.9735   1.1229   1.4219  
+    ## 
+    ## Coefficients:
+    ##                                                    Estimate Std. Error z value
+    ## (Intercept)                                        -0.39529    0.05536  -7.140
+    ## global_subjectivity                                 0.83315    0.12501   6.664
+    ## global_sentiment_polarity                          -0.04180    0.50313  -0.083
+    ## title_sentiment_polarity                            0.26930    0.06820   3.949
+    ## title_subjectivity                                  0.10611    0.03952   2.685
+    ## global_subjectivity:global_sentiment_polarity       2.10582    0.99083   2.125
+    ## global_sentiment_polarity:title_sentiment_polarity  0.26036    0.40676   0.640
+    ##                                                    Pr(>|z|)    
+    ## (Intercept)                                        9.30e-13 ***
+    ## global_subjectivity                                2.66e-11 ***
+    ## global_sentiment_polarity                           0.93379    
+    ## title_sentiment_polarity                           7.86e-05 ***
+    ## title_subjectivity                                  0.00725 ** 
+    ## global_subjectivity:global_sentiment_polarity       0.03356 *  
+    ## global_sentiment_polarity:title_sentiment_polarity  0.52212    
+    ## ---
+    ## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
+    ## 
+    ## (Dispersion parameter for binomial family taken to be 1)
+    ## 
+    ##     Null deviance: 38335  on 27749  degrees of freedom
+    ## Residual deviance: 38032  on 27743  degrees of freedom
+    ## AIC: 38046
+    ## 
+    ## Number of Fisher Scoring iterations: 4
+
+Use `prediect` to predict probability of having \<1400 shares. Map
+probabilities less than 0.5 to \<1400 shares or 0, and probabilities of
+greeater than or equal to 0.5 to ≥1400 shares or 1. Use
+`confusionMatrix` to determine the accuracy of the model.
+
+``` r
+glmPred <- predict(glmFit, newdata=newsDataTest, type="response")
+glmPred <- ifelse(glmPred<0.5, "0", "1")
+glmPred <- as.factor(glmPred)
+confusionMatrix(glmPred, newsDataTest$shares)
+```
+
+    ## Confusion Matrix and Statistics
+    ## 
+    ##           Reference
+    ## Prediction    0    1
+    ##          0 1446 1215
+    ##          1 4134 5099
+    ##                                           
+    ##                Accuracy : 0.5503          
+    ##                  95% CI : (0.5413, 0.5592)
+    ##     No Information Rate : 0.5309          
+    ##     P-Value [Acc > NIR] : 1.123e-05       
+    ##                                           
+    ##                   Kappa : 0.0688          
+    ##                                           
+    ##  Mcnemar's Test P-Value : < 2.2e-16       
+    ##                                           
+    ##             Sensitivity : 0.2591          
+    ##             Specificity : 0.8076          
+    ##          Pos Pred Value : 0.5434          
+    ##          Neg Pred Value : 0.5523          
+    ##              Prevalence : 0.4691          
+    ##          Detection Rate : 0.1216          
+    ##    Detection Prevalence : 0.2237          
+    ##       Balanced Accuracy : 0.5334          
+    ##                                           
+    ##        'Positive' Class : 0               
+    ## 
+
+From the output, we can see this model has an accuracy of 55.03% and
+therefore, has a misclassification rate of 44.97%.
 
 ## Automation
