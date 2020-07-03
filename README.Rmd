@@ -82,32 +82,24 @@ GGally::ggpairs(newsDataTrain)
 
 ## Modeling  
 
-### Ensemble Model - Classification Tree
+### Ensemble Model - Tree Bag
 
-This classification tree aims to predict the `shares` category based on `global_subjectivity`,`global_sentiment_polarity`, `title_subjectivity`, and `title_sentiment_polarity`. Classification trees require the tuning parameter **cp**. `trainControl` is used to determine the "best" **cp** value for this model (cp=0.001 is used). The `preProcess` agrument standardizes the variables.   
+This tree bag model aims to predict the `shares` category based on `global_subjectivity`,`global_sentiment_polarity`, `title_subjectivity`, and `title_sentiment_polarity`. The `preProcess` agrument standardizes the variables.   
 
-```{r rfFit, echo=TRUE, eval=TRUE, results=FALSE}
-trCtrl <- trainControl(method="repeatedcv", number=10, repeats=3)
-classTreeFit <- train(shares~ global_subjectivity*global_sentiment_polarity*
+```{r treeBagFit, echo=TRUE, eval=TRUE, results=FALSE}
+treeBagFit <- train(shares~ global_subjectivity*global_sentiment_polarity*
                  title_sentiment_polarity*title_subjectivity, 
                data=newsDataTrain, 
-               method="rpart",
-               trControl=trCtrl,
-               preProcess=c("center", "scale"),
-               tuneGrid=expand.grid(cp=c(0.001,0.0025,0.005,0.0075,
-                                         0.01,0.0125,0.015,0.0175,
-                                         0.02,0.0225,0.025,0.0275,
-                                         0.03,0.0325,0.035,0.0375,
-                                         0.04,0.0425,0.045,0.0475,
-                                         0.05,0.0525,0.055,0.0575)))
-classTreeFit
+               method="treebag",
+               preProcess=c("center", "scale"))
+treeBagFit
 ```
 
 Use the `predict` function to predict the `shares` variable in the **newsDataTest** data set. `confusionMatrix` compares the predicted values to the actual values in the data set and provides the accuracy of the model.Accuracy and misclassification rate (1-accuracy) are used to evaluate how well the model predicts `shares` in **newsDataTest**.  
 
-```{r rfPred, echo=TRUE, eval=TRUE}
-classTreePred <- predict(classTreeFit, newdata=newsDataTest)
-confusionMatrix(classTreePred, newsDataTest$shares)
+```{r treeBagPred, echo=TRUE, eval=TRUE}
+treeBagPred <- predict(treeBagFit, newdata=newsDataTest)
+confusionMatrix(treeBagPred, newsDataTest$shares)
 ```
 
 ### Linear Regression Model - Logistic Regression  
@@ -134,7 +126,7 @@ confusionMatrix(glmPred, newsDataTest$shares)
 
 ## Automation  
 
-The following code chunk is to automate the html reports for each day of the week. Create a variable, **days**, that contains all the unique values of **day** variable in the **newsData** data set and create a .md file name (the output files) for each day.
+The following code chunk is to automate the html reports for each day of the week. Create a variable, **days**, that contains all the unique values of **day** variable in the **newsData** data set and create a file name (the output files) for each day.
 
 ```{r automate, echo=TRUE, eval=FALSE}
 weekDays <- unique(newsData$day)

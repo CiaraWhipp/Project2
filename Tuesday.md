@@ -125,7 +125,7 @@ variables by categories of the character variables.
 GGally::ggpairs(newsDataTrain)
 ```
 
-![](README_files/figure-gfm/plot-1.png)<!-- -->
+![](Tuesday_files/figure-gfm/plot-1.png)<!-- -->
 
 ## Modeling
 
@@ -292,7 +292,7 @@ file name (the output files) for each day.
 
 ``` r
 weekDays <- unique(newsData$day)
-outputFile <- paste0(days, ".md")
+outputFile <- paste0(days, ".html")
 params = lapply(weekDays, FUN=function(x){list(day=x)})
 reports <- tibble(outputFile, params)
 apply(reports, MARGIN=1,
@@ -300,13 +300,3 @@ apply(reports, MARGIN=1,
         render(input="README.Rmd", output_file=x[[1]], params=x[[2]])
       })
 ```
-
-## Links to Reports
-
-The analysis for [Monday can be found here.](Monday.md)
-The analysis for [Tuesday can be found here.](Tuesday.md)
-The analysis for [Wednesday can be found here.](Wednesday.md)
-The analysis for [Thursday can be found here.](Thursday.md)
-The analysis for [Friday can be found here.](Friday.md)
-The analysis for [Saturday can be found here.](Saturday.md)
-The analysis for [Sunday can be found here.](Sunday.md)
