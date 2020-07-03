@@ -158,7 +158,8 @@ classTreeFit
 Use the `predict` function to predict the `shares` variable in the
 **newsDataTest** data set. `confusionMatrix` compares the predicted
 values to the actual values in the data set and provides the accuracy of
-the model.
+the model.Accuracy and misclassification rate (1-accuracy) are used to
+evaluate how well the model predicts `shares` in **newsDataTest**.
 
 ``` r
 classTreePred <- predict(classTreeFit, newdata=newsDataTest)
@@ -192,9 +193,6 @@ confusionMatrix(classTreePred, newsDataTest$shares)
     ##                                           
     ##        'Positive' Class : 0               
     ## 
-
-From the output, we can see this model has an accuracy of 56.48% and
-therefore, has a misclassification rate of 43.52%.
 
 ### Linear Regression Model - Logistic Regression
 
@@ -255,7 +253,9 @@ summary(glmFit)
 Use `prediect` to predict probability of having \<1400 shares. Map
 probabilities less than 0.5 to \<1400 shares or 0, and probabilities of
 greeater than or equal to 0.5 to ≥1400 shares or 1. Use
-`confusionMatrix` to determine the accuracy of the model.
+`confusionMatrix` to determine the accuracy of the model. Accuracy and
+misclassification rate (1-accuracy) are used to evaluate how well the
+model predicts `shares` in **newsDataTest**.
 
 ``` r
 glmPred <- predict(glmFit, newdata=newsDataTest, type="response")
@@ -292,20 +292,29 @@ confusionMatrix(glmPred, newsDataTest$shares)
     ##        'Positive' Class : 0               
     ## 
 
-From the output, we can see this model has an accuracy of 55.03% and
-therefore, has a misclassification rate of 44.97%.
-
 ## Automation
 
 The following code chunk is to automate the html reports for each day of
 the week. Create a variable, **days**, that contains all the unique
-values of **day** variable in the **newsData** data set and create an
-hmtl file name (the output files) for each day. Use `lapply` function to
-apply each day to `params` in the header.
+values of **day** variable in the **newsData** data set and create a .md
+file name (the output files) for each day.
 
 ``` r
-days <- unique(newsData$day)
-outputFile <- paste0(days, ".html")
-params = lapply(days, FUN=function(x){list(day=x)})
+weekDays <- unique(newsData$day)
+outputFile <- paste0(days, ".md")
+params = lapply(weekDays, FUN=function(x){list(day=x)})
 reports <- tibble(outputFile, params)
+apply(reports, MARGIN=1,
+      FUN=function(x){
+        render(input="README.Rmd", output_file=x[[1]], params=x[[2]])
+      })
 ```
+## Links  
+
+The analysis for [Monday can be found here.](Monday.html)
+The analysis for [Tuesday can be found here.](Tuesday.html)
+The analysis for [Wednesday can be found here.](Wednesday.html)
+The analysis for [Thursday can be found here.](Thursday.html)
+The analysis for [Friday can be found here.](Friday.html)
+The analysis for [Saturday can be found here.](Saturday.html)
+The analysis for [Sunday can be found here.](Sunday.html)

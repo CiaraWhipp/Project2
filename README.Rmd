@@ -6,14 +6,13 @@ output:
   rmarkdown::github_document:
     toc: true
     toc_depth: 1
-params:
-  day: "Monday"
 ---
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
 library(tidyverse)
 library(caret)
+library(rmarkdown)
 ```
 
 ## Introduction  
@@ -104,14 +103,12 @@ classTreeFit <- train(shares~ global_subjectivity*global_sentiment_polarity*
 classTreeFit
 ```
 
-Use the `predict` function to predict the `shares` variable in the **newsDataTest** data set. `confusionMatrix` compares the predicted values to the actual values in the data set and provides the accuracy of the model.  
+Use the `predict` function to predict the `shares` variable in the **newsDataTest** data set. `confusionMatrix` compares the predicted values to the actual values in the data set and provides the accuracy of the model.Accuracy and misclassification rate (1-accuracy) are used to evaluate how well the model predicts `shares` in **newsDataTest**.  
 
 ```{r rfPred, echo=TRUE, eval=TRUE}
 classTreePred <- predict(classTreeFit, newdata=newsDataTest)
 confusionMatrix(classTreePred, newsDataTest$shares)
 ```
-
-From the output, we can see this model has an accuracy of 56.48% and therefore, has a misclassification rate of 43.52%.  
 
 ### Linear Regression Model - Logistic Regression  
 
@@ -126,7 +123,7 @@ glmFit <- glm(shares ~ global_subjectivity*global_sentiment_polarity +
 summary(glmFit)
 ```
 
-Use `prediect` to predict probability of having <1400 shares. Map probabilities less than 0.5 to <1400 shares or 0, and probabilities of greeater than or equal to 0.5 to ≥1400 shares or 1. Use `confusionMatrix` to determine the accuracy of the model.  
+Use `prediect` to predict probability of having <1400 shares. Map probabilities less than 0.5 to <1400 shares or 0, and probabilities of greeater than or equal to 0.5 to ≥1400 shares or 1. Use `confusionMatrix` to determine the accuracy of the model. Accuracy and misclassification rate (1-accuracy) are used to evaluate how well the model predicts `shares` in **newsDataTest**.  
 
 ```{r glmPred, echo=TRUE, eval=TRUE}
 glmPred <- predict(glmFit, newdata=newsDataTest, type="response")
@@ -135,15 +132,17 @@ glmPred <- as.factor(glmPred)
 confusionMatrix(glmPred, newsDataTest$shares)
 ```
 
-From the output, we can see this model has an accuracy of 55.03% and therefore, has a misclassification rate of 44.97%.  
-
 ## Automation  
 
-The following code chunk is to automate the html reports for each day of the week. Create a variable, **days**, that contains all the unique values of **day** variable in the **newsData** data set and create an hmtl file name (the output files) for each day. Use `lapply` function to apply each day to `params` in the header.
+The following code chunk is to automate the html reports for each day of the week. Create a variable, **days**, that contains all the unique values of **day** variable in the **newsData** data set and create a .md file name (the output files) for each day.
 
 ```{r automate, echo=TRUE, eval=FALSE}
-days <- unique(newsData$day)
-outputFile <- paste0(days, ".html")
-params = lapply(days, FUN=function(x){list(day=x)})
+weekDays <- unique(newsData$day)
+outputFile <- paste0(days, ".md")
+params = lapply(weekDays, FUN=function(x){list(day=x)})
 reports <- tibble(outputFile, params)
+apply(reports, MARGIN=1,
+      FUN=function(x){
+        render(input="README.Rmd", output_file=x[[1]], params=x[[2]])
+      })
 ```
