@@ -115,6 +115,12 @@ knitr::kable(apply(newsDataGt,2,summary), digits=2,
 
 Summary Statisitics for ≥1400 Shares in Training Data
 
+## Plots
+
+Use `ggpairs` to create graphs that show relationships between numeric
+variables and summary graphs for character variables and numerical
+variables by categories of the character variables.
+
 ``` r
 GGally::ggpairs(newsDataTrain)
 ```
@@ -129,8 +135,8 @@ This classification tree aims to predict the `shares` category based on
 `global_subjectivity`,`global_sentiment_polarity`, `title_subjectivity`,
 and `title_sentiment_polarity`. Classification trees require the tuning
 parameter **cp**. `trainControl` is used to determine the “best” **cp**
-value for this model. The `preProcess` agrument standardizes the
-variables.
+value for this model (cp=0.001 is used). The `preProcess` agrument
+standardizes the variables.
 
 ``` r
 trCtrl <- trainControl(method="repeatedcv", number=10, repeats=3)
@@ -139,7 +145,13 @@ classTreeFit <- train(shares~ global_subjectivity*global_sentiment_polarity*
                data=newsDataTrain, 
                method="rpart",
                trControl=trCtrl,
-               preProcess=c("center", "scale"))
+               preProcess=c("center", "scale"),
+               tuneGrid=expand.grid(cp=c(0.001,0.0025,0.005,0.0075,
+                                         0.01,0.0125,0.015,0.0175,
+                                         0.02,0.0225,0.025,0.0275,
+                                         0.03,0.0325,0.035,0.0375,
+                                         0.04,0.0425,0.045,0.0475,
+                                         0.05,0.0525,0.055,0.0575)))
 classTreeFit
 ```
 
@@ -157,34 +169,34 @@ confusionMatrix(classTreePred, newsDataTest$shares)
     ## 
     ##           Reference
     ## Prediction    0    1
-    ##          0 1598 1301
-    ##          1 3982 5013
+    ##          0 1566 1162
+    ##          1 4014 5152
     ##                                           
-    ##                Accuracy : 0.5558          
-    ##                  95% CI : (0.5468, 0.5648)
+    ##                Accuracy : 0.5648          
+    ##                  95% CI : (0.5559, 0.5738)
     ##     No Information Rate : 0.5309          
-    ##     P-Value [Acc > NIR] : 2.458e-08       
+    ##     P-Value [Acc > NIR] : 5.562e-14       
     ##                                           
-    ##                   Kappa : 0.0826          
+    ##                   Kappa : 0.0996          
     ##                                           
     ##  Mcnemar's Test P-Value : < 2.2e-16       
     ##                                           
-    ##             Sensitivity : 0.2864          
-    ##             Specificity : 0.7939          
-    ##          Pos Pred Value : 0.5512          
-    ##          Neg Pred Value : 0.5573          
+    ##             Sensitivity : 0.2806          
+    ##             Specificity : 0.8160          
+    ##          Pos Pred Value : 0.5740          
+    ##          Neg Pred Value : 0.5621          
     ##              Prevalence : 0.4691          
-    ##          Detection Rate : 0.1344          
-    ##    Detection Prevalence : 0.2437          
-    ##       Balanced Accuracy : 0.5402          
+    ##          Detection Rate : 0.1317          
+    ##    Detection Prevalence : 0.2294          
+    ##       Balanced Accuracy : 0.5483          
     ##                                           
     ##        'Positive' Class : 0               
     ## 
 
-From the output, we can see this model has an accuracy of 55.58% and
-therefore, has a misclassification rate of 44.42%.
+From the output, we can see this model has an accuracy of 56.48% and
+therefore, has a misclassification rate of 43.52%.
 
-### Linear Regression Model - Logistic Regress
+### Linear Regression Model - Logistic Regression
 
 Since our target variable is binary, we can use the binomial
 distribution to fit a logistic regression model. I choose to model
@@ -284,3 +296,16 @@ From the output, we can see this model has an accuracy of 55.03% and
 therefore, has a misclassification rate of 44.97%.
 
 ## Automation
+
+The following code chunk is to automate the html reports for each day of
+the week. Create a variable, **days**, that contains all the unique
+values of **day** variable in the **newsData** data set and create an
+hmtl file name (the output files) for each day. Use `lapply` function to
+apply each day to `params` in the header.
+
+``` r
+days <- unique(newsData$day)
+outputFile <- paste0(days, ".html")
+params = lapply(days, FUN=function(x){list(day=x)})
+reports <- tibble(outputFile, params)
+```

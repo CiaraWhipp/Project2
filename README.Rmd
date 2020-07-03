@@ -6,7 +6,7 @@ output:
   rmarkdown::github_document:
     toc: true
     toc_depth: 1
-parms: 
+params:
   day: "Monday"
 ---
 
@@ -73,16 +73,19 @@ knitr::kable(apply(newsDataGt,2,summary), digits=2,
              caption="Summary Statisitics for ≥1400 Shares in Training Data")
 ```
 
+## Plots  
+
+Use `ggpairs` to create graphs that show relationships between numeric variables and summary graphs for character variables and numerical variables by categories of the character variables.  
+
 ```{r plot,newsDataGtecho=TRUE, eval=TRUE, message=FALSE}
 GGally::ggpairs(newsDataTrain)
 ```
-
 
 ## Modeling  
 
 ### Ensemble Model - Classification Tree
 
-This classification tree aims to predict the `shares` category based on `global_subjectivity`,`global_sentiment_polarity`, `title_subjectivity`, and `title_sentiment_polarity`. Classification trees require the tuning parameter **cp**. `trainControl` is used to determine the "best" **cp** value for this model. The `preProcess` agrument standardizes the variables.   
+This classification tree aims to predict the `shares` category based on `global_subjectivity`,`global_sentiment_polarity`, `title_subjectivity`, and `title_sentiment_polarity`. Classification trees require the tuning parameter **cp**. `trainControl` is used to determine the "best" **cp** value for this model (cp=0.001 is used). The `preProcess` agrument standardizes the variables.   
 
 ```{r rfFit, echo=TRUE, eval=TRUE, results=FALSE}
 trCtrl <- trainControl(method="repeatedcv", number=10, repeats=3)
@@ -91,7 +94,13 @@ classTreeFit <- train(shares~ global_subjectivity*global_sentiment_polarity*
                data=newsDataTrain, 
                method="rpart",
                trControl=trCtrl,
-               preProcess=c("center", "scale"))
+               preProcess=c("center", "scale"),
+               tuneGrid=expand.grid(cp=c(0.001,0.0025,0.005,0.0075,
+                                         0.01,0.0125,0.015,0.0175,
+                                         0.02,0.0225,0.025,0.0275,
+                                         0.03,0.0325,0.035,0.0375,
+                                         0.04,0.0425,0.045,0.0475,
+                                         0.05,0.0525,0.055,0.0575)))
 classTreeFit
 ```
 
@@ -102,9 +111,9 @@ classTreePred <- predict(classTreeFit, newdata=newsDataTest)
 confusionMatrix(classTreePred, newsDataTest$shares)
 ```
 
-From the output, we can see this model has an accuracy of 55.58% and therefore, has a misclassification rate of 44.42%.  
+From the output, we can see this model has an accuracy of 56.48% and therefore, has a misclassification rate of 43.52%.  
 
-### Linear Regression Model - Logistic Regress
+### Linear Regression Model - Logistic Regression  
 
 Since our target variable is binary, we can use the binomial distribution to fit a logistic regression model. I choose to model `shares` by the all combinations of main effects and interactions of `global_subjectivity` and `global_sentiment_polarity`, all combinations of main effects and interactions of `global_sentiment_polarity` and `title_sentiment_polarity`, and the main effect of `title_subjectivity`.  
 
@@ -130,4 +139,11 @@ From the output, we can see this model has an accuracy of 55.03% and therefore, 
 
 ## Automation  
 
+The following code chunk is to automate the html reports for each day of the week. Create a variable, **days**, that contains all the unique values of **day** variable in the **newsData** data set and create an hmtl file name (the output files) for each day. Use `lapply` function to apply each day to `params` in the header.
 
+```{r automate, echo=TRUE, eval=FALSE}
+days <- unique(newsData$day)
+outputFile <- paste0(days, ".html")
+params = lapply(days, FUN=function(x){list(day=x)})
+reports <- tibble(outputFile, params)
+```
